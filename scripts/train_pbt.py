@@ -196,7 +196,7 @@ def run_n_actors_sequentially(
 
             if (
                 config.evaluation_frequency != 0
-                and step.total_step_id % config.evaluation_frequency == 0
+                and current_step_id % config.evaluation_frequency == 0
             ):
                 return_list = [
                     evaluate(
