@@ -64,6 +64,13 @@ as expected.
 make test_training_scripts
 ```
 
+## Contributors
+
+<a href="https://github.com/thomashirtz" title="Thomas Hirtz"><img src="https://github.com/thomashirtz.png" height="auto" width="50" style="border-radius:50%"></a>
+<a href="https://github.com/flajolet" title="Arthur Flajolet"><img src="https://github.com/flajolet.png" height="auto" width="50" style="border-radius:50%"></a>
+<a href="https://github.com/cibeah" title="Claire Bizon Monroc"><img src="https://github.com/cibeah.png" height="auto" width="50" style="border-radius:50%"></a>
+<a href="https://github.com/ranzenTom" title="Thomas Pierrot"><img src="https://github.com/ranzenTom.png" height="auto" width="50" style="border-radius:50%"></a>
+
 ## Citing this work
 
 If you use the code or data in this package, please cite:
