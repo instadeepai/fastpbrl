@@ -19,6 +19,7 @@ from tensorboardX import SummaryWriter
 
 from fastpbrl import shared_memory as sm
 from fastpbrl import utils
+from fastpbrl.tree_queue import TreeQueue
 from fastpbrl.agents.sac_pbt import SACPBT
 from fastpbrl.agents.td3_pbt import TD3PBT
 from fastpbrl.evaluate import evaluate
@@ -438,6 +439,19 @@ def main(config: PBTConfig) -> int:
     device_id_to_shared_hyperparams: Dict[int, sm.NestedSharedMemory] = {}
     all_mp_variables = []
 
+    # Generate a dummy Transition object to pre-allocate memory for the queues where
+    # transition data will be stored
+    dummy_transition = next(
+        step_generator(
+            policy_params=None,
+            hyperparams=None,
+            environment=utils.make_gym_env(config.env_name),
+            num_warmup_steps=2,
+            max_steps_per_episode=2,
+            select_action_function=None,
+        )
+    ).last_transition
+
     # Allocate shared memory for storing policy params
     with SharedMemoryManager() as shared_memory_manager:
         for device_id in range(config.num_devices):
@@ -445,7 +459,16 @@ def main(config: PBTConfig) -> int:
             # processes
 
             transition_queue_list = [
-                mp.Queue(maxsize=config.transition_queue_size)
+                TreeQueue(
+                    nested_array=tree.map_structure(
+                        lambda x: np.stack(
+                            [x for _ in range(config.transition_queue_batch_size)]
+                        ),
+                        dummy_transition,
+                    ),
+                    maxsize=config.transition_queue_size,
+                    shared_memory_manager=shared_memory_manager,
+                )
                 for _ in range(population_size_per_device)
             ]  # queues for sending transition data from the actors to the learner
             parameters_version = mp.Value(
