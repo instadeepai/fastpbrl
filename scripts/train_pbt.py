@@ -153,10 +153,6 @@ def run_n_actors_sequentially(
     for env_step_generator in env_step_generator_list:
         next(env_step_generator)
 
-    num_episodes_per_evaluation = max(
-        1, config.num_episodes_per_evaluation // config.num_actor_processes_per_device
-    )
-
     while True:
         # Get the current global step id
         with global_env_step_id.get_lock():
@@ -196,7 +192,7 @@ def run_n_actors_sequentially(
 
             if (
                 config.evaluation_frequency != 0
-                and step.total_step_id % config.evaluation_frequency == 0
+                and current_step_id % config.evaluation_frequency == 0
             ):
                 return_list = [
                     evaluate(
@@ -205,7 +201,7 @@ def run_n_actors_sequentially(
                         policy_params=params,
                         hyperparams=hyperparams,
                     )
-                    for _ in range(num_episodes_per_evaluation)
+                    for _ in range(config.num_episodes_per_evaluation)
                 ]
                 information_queue.put(
                     {
