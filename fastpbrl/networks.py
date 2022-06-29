@@ -173,11 +173,11 @@ class AtariTorso(haiku.Module):
 
         self._network = haiku.Sequential(
             [
-                haiku.Conv2D(16, [8, 8], 4),
+                haiku.Conv2D(16, [8, 8], 4, padding="VALID"),
                 jax.nn.relu,
-                haiku.Conv2D(32, [4, 4], 2),
+                haiku.Conv2D(32, [4, 4], 2, padding="VALID"),
                 jax.nn.relu,
-                haiku.Conv2D(64, [3, 3], 1),
+                haiku.Conv2D(64, [3, 3], 1, padding="VALID"),
                 jax.nn.relu,
             ]
         )
