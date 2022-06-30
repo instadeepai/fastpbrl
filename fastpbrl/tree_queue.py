@@ -1,9 +1,9 @@
 import multiprocessing
 from multiprocessing.managers import SharedMemoryManager
+from typing import Any, Dict
 
-import tree
 import numpy as np
-from typing import Dict, Any
+import tree
 
 from fastpbrl.types import NestedNumpyArray
 from fastpbrl.utils import _update

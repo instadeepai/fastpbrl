@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, TypeVar
 
 import gym
 import jax
@@ -213,3 +213,27 @@ def fix_transition_shape(transition_batch: Transition) -> Transition:
 
 def polyak_averaging(x: jnp.ndarray, y: jnp.ndarray, tau: float) -> jnp.ndarray:
     return x * (1 - tau) + y * tau
+
+
+T = TypeVar("T")
+
+
+def split_list(list_object: Sequence[T], num_lists: int) -> Sequence[Sequence[T]]:
+    """
+    Split a list of objects into a list of size num_lists of lists of the same
+    objects as evenly as possible.
+    """
+    num_objects = len(list_object)
+    num_objects_per_list = num_objects // num_lists
+    splitted_list_object = []
+    start_index = 0
+    for i in range(num_lists):
+        if i == num_lists - 1:
+            splitted_list_object.append(list_object[start_index:])
+            break
+        end_index = start_index + num_objects_per_list
+        if num_objects % num_lists > i:
+            end_index += 1
+        splitted_list_object.append(list_object[start_index:end_index])
+        start_index = end_index
+    return splitted_list_object

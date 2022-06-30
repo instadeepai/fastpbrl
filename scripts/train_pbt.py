@@ -19,7 +19,6 @@ from tensorboardX import SummaryWriter
 
 from fastpbrl import shared_memory as sm
 from fastpbrl import utils
-from fastpbrl.tree_queue import TreeQueue
 from fastpbrl.agents.sac_pbt import SACPBT
 from fastpbrl.agents.td3_pbt import TD3PBT
 from fastpbrl.evaluate import evaluate
@@ -27,6 +26,7 @@ from fastpbrl.non_blocking_iterable import MultiThreadedNonBlockingIterable
 from fastpbrl.pbt import PBTExploitStrategy, PBTManager, TruncationPBTExploit
 from fastpbrl.replay_buffer import ReplayBufferConfig, ReplayBufferWithSampleRatio
 from fastpbrl.step_generator import step_generator
+from fastpbrl.tree_queue import TreeQueue
 from fastpbrl.types import Transition
 
 logging.basicConfig(
@@ -81,10 +81,8 @@ class PBTConfig:
     # GPU
     prefetch_factor: int = 6  # Maximum number of batches to prepare ahead of time for
     # the learners
-    num_agents_per_replay_buffer_thread: int = 5  # Number of threads used to populate
-    # the replay buffers in the background. Threads are shared between agents for
-    # efficiency purposes. Setting this value to 1 will assign one thread for each
-    # agent.
+    num_threads_replay_buffer: int = 1  # Number of threads used to populate
+    # the replay buffers in the background using data sent by the actors through queues.
 
     def __post_init__(self):
         self.seed = self.seed if self.seed is not None else random.randint(0, 1_000_000)
@@ -248,26 +246,18 @@ def run_learner(
     else:
         device = jax.devices(backend="cpu")[0]
 
-    replay_buffer_list = []
-    num_agents_per_replay_buffer_thread = config.num_agents_per_replay_buffer_thread
-    num_transition_queue = len(transition_queue_list)
-    for i in range(
-        (num_transition_queue + num_agents_per_replay_buffer_thread - 1)
-        // num_agents_per_replay_buffer_thread
-    ):
-        replay_buffer_list.append(
-            iter(
-                ReplayBufferWithSampleRatio(
-                    list_transition_queue=transition_queue_list[
-                        i
-                        * num_agents_per_replay_buffer_thread : (i + 1)
-                        * num_agents_per_replay_buffer_thread
-                    ],
-                    batch_size=config.batch_size * config.num_update_step_at_once,
-                    config=config.replay_buffer_config,
-                )
+    replay_buffer_list = [
+        iter(
+            ReplayBufferWithSampleRatio(
+                list_transition_queue=partial_transition_queue_list,
+                batch_size=config.batch_size * config.num_update_step_at_once,
+                config=config.replay_buffer_config,
             )
         )
+        for partial_transition_queue_list in utils.split_list(
+            transition_queue_list, config.num_threads_replay_buffer
+        )
+    ]
 
     def collate_function(transition_batch_list: List[List[Transition]]) -> Transition:
         all_transition_batch = [
