@@ -76,11 +76,12 @@ make test_training_scripts
 If you use the code or data in this package, please cite:
 
 ```bibtex
-@article{fastpbrl,
-  title = {Fast Population-Based Reinforcement Learning on a Single Machine},
-  author = {Flajolet, Arthur and Monroc, Claire Bizon and Beguir, Karim and Pierrot, Thomas},
-  year = {2022},
-  journal={arXiv preprint arXiv:2206.08888},
-  url = {https://arxiv.org/abs/2206.08888},
+@inproceedings{flajolet2022fast,
+  title={Fast Population-Based Reinforcement Learning on a Single Machine},
+  author={Flajolet, Arthur and Monroc, Claire Bizon and Beguir, Karim and Pierrot, Thomas},
+  booktitle={International Conference on Machine Learning},
+  pages={6533--6547},
+  year={2022},
+  organization={PMLR}
 }
 ```
